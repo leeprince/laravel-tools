@@ -9,7 +9,7 @@ use Illuminate\Http\JsonResponse;
  *
  * Class BaseJsonResponse
  */
-class BaseResponse
+class ResponseP
 {
     // 状态码非 0 都为错误码；等于 0 为正确码
     /** @var array  */
@@ -18,13 +18,16 @@ class BaseResponse
         'success' => 0, // 正确
         'fail' => 1000, // 通用错误码
         'argMiss' => 1001, // 参数缺失
-        'timeExp' => 1002, // 时间过期
-        'signErr' => 1003, // 签名错误
-        'curlExp' => 1004, // curl请求异常
-        'apiErr' => 1005, // API接口返回错误
-        'dataNULL' => 1006, // 数据为空
-        'respExp' => 1007, // 返回数据异常
+        'tokenErr' => 1002, // 参数缺失
+        'timeExp' => 1003, // 时间过期
+        'signErr' => 1004, // 签名错误
+        'curlExp' => 1005, // curl请求异常
+        'apiErr' => 1006, // API接口返回错误
+        'dataNULL' => 1007, // 数据为空
+        'respExp' => 1008, // 返回数据异常
     ];
+    
+    const HTTP_CODE_401 = 401; // 请求要求用户的身份认证
     
     /**
      * 基础响应数据处理
@@ -91,8 +94,9 @@ class BaseResponse
     /**
      * 响应失败：json
      *
-     * @param array $data
      * @param string $msg
+     * @param int $code
+     * @param array|null $data
      * @param int $httpStatus
      * @param array $headers
      * @param int $options
