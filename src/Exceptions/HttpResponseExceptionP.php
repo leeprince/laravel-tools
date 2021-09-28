@@ -10,7 +10,7 @@ use Exception;
 use Illuminate\Support\Facades\Request;
 use Leeprince\LaravelTools\Support\ResponseP;
 
-class InvalidArgumentExceptionP extends Exception
+class HttpResponseExceptionP extends Exception
 {
     /**
      * InvalidArgumentExceptionP constructor.
