@@ -1,6 +1,8 @@
 <?php
 namespace Leeprince\LaravelTools;
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,6 +26,7 @@ class LaravelToolsServiceProvider extends ServiceProvider
     {
         $this->loadRoutes();
         $this->loadViews();
+        $this->listenSql();
     }
     
     /**
@@ -68,6 +71,14 @@ class LaravelToolsServiceProvider extends ServiceProvider
     private function loadViews()
     {
         $this->loadViewsFrom(__DIR__."/Resources/views/", 'unitview');
+    }
+    
+    private function listenSql()
+    {
+        DB::listen(function($query) {
+            $GLOBALS['_sql_counter'] = $GLOBALS['_sql_counter'] ?? 1;
+            Log::debug(sprintf('sql #%-3d %3dms: %s # binds: %s', $GLOBALS['_sql_counter']++, $query->time, $query->sql, implode(' | ', $query->bindings)));
+        });
     }
     
 }

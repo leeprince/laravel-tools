@@ -19,8 +19,9 @@ class BasePModel extends Model
      * @param array $select
      * @return array
      */
-    public static function firstP(array $where, array $columns = ['*'])
+    public static function firstP(array $where, array $columns = ['*'], bool $ignoreDeleted = false, bool $isDeleted = false)
     {
+        self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
         $data = static::query()->where($where)->first($columns);
         if (empty($data)) {
             return [];
@@ -35,8 +36,9 @@ class BasePModel extends Model
      * @param string $columns
      * @return int
      */
-    public static function countP(array $where, string $columns = "*")
+    public static function countP(array $where, string $columns = "*", bool $ignoreDeleted = false, bool $isDeleted = false)
     {
+        self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
         $count = static::query()->where($where)->count($columns);
         return $count;
     }
@@ -57,12 +59,12 @@ class BasePModel extends Model
      * 添加信息
      *
      * @param array $data
-     * @param bool $checkTimeField
+     * @param bool $autoTimeField
      * @return int
      */
-    public static function insertGetIdP(array $data, bool $checkTimeField = true)
+    public static function insertGetIdP(array $data, bool $autoTimeField = true)
     {
-        self::checkTimeField($data, $checkTimeField);
+        self::autoCreateAtAndUpdatedAtField($data, $autoTimeField);
         return static::query()->insertGetId($data);
     }
     
@@ -70,17 +72,18 @@ class BasePModel extends Model
      * 添加信息
      *
      * @param array $data
-     * @param bool $checkTimeField
+     * @param bool $autoTimeField
      * @return int
      */
-    public static function updateP(array $where, array $data, bool $checkTimeField = true)
+    public static function updateP(array $where, array $data, bool $autoTimeField = true)
     {
-        self::checkTimeField($data, $checkTimeField);
+        self::autoCreateAtAndUpdatedAtField($data, $autoTimeField);
         return static::query()->where($where)->update($data);
     }
     
     /**
      * 存在更新；不存在则插入
+     *  created_at、updated_at 字段需外部维护
      *
      * @param array $where
      * @param array $data
@@ -92,14 +95,14 @@ class BasePModel extends Model
     }
     
     /**
-     * 检查 created_at、updated_at 字段
+     * 自动检查并添加 created_at、updated_at 字段
      *
      * @param array $data
-     * @param bool $checkTimeField
+     * @param bool $autoTimeField
      */
-    private static function checkTimeField(array &$data, bool $checkTimeField)
+    private static function autoCreateAtAndUpdatedAtField(array &$data, bool $autoTimeField)
     {
-        if ($checkTimeField) {
+        if ($autoTimeField) {
             $ctime = time();
             if (!isset($data['created_at']) || empty($data['created_at'])) {
                 $data['created_at'] = $ctime;
@@ -107,6 +110,34 @@ class BasePModel extends Model
             if (!isset($data['updated_at']) || empty($data['updated_at'])) {
                 $data['updated_at'] = $ctime;
             }
+        }
+    }
+    
+    /**
+     * 自动检查并添加 deleted_at 字段
+     *
+     * @param array $where
+     * @param bool $ignoreDeleted 是否忽略 deleted_at 字段，忽略则不再检查 $isDeleted
+     * @param bool $isDeleted   $ignoreDeleted = false 情况下，判断并添加 deleted_at 字段
+     */
+    private static function autoDeletedAtField(array &$where, bool $ignoreDeleted, bool $isDeleted)
+    {
+        // 存在 deleted_at 字段不再检查
+        if (isset($where['deleted_at'])) {
+            return;
+        }
+        
+        // 忽略 deleted_at 字段则不继续检查
+        if ($ignoreDeleted) {
+           return;
+        }
+    
+        if ($isDeleted) {
+            array_push($where, ['deleted_at', '!=', 0]);
+        } else {
+            // 两种都可以
+            // $where = array_merge($where, ['deleted_at' => 0]);
+            array_push($where, ['deleted_at', '=', 0]);
         }
     }
 }
