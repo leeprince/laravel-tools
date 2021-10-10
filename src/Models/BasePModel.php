@@ -30,6 +30,47 @@ class BasePModel extends Model
     }
     
     /**
+     * 获取多行数据
+     *
+     * @param array $where
+     * @param array $columns
+     * @param string $orderByRaw
+     * @param string $groupByRaw
+     * @param int $offset
+     * @param int $limit
+     * @param bool $ignoreDeleted
+     * @param bool $isDeleted
+     * @return array
+     */
+    public static function getP(
+        array $where,
+        array $columns = ['*'],
+        string $orderByRaw = "",
+        string $groupByRaw = "",
+        int $offset = 0,
+        int $limit = 0,
+        bool $ignoreDeleted = false,
+        bool $isDeleted = false
+    ){
+        self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
+        $builder = static::query()->select($columns);
+        if ( ! empty($groupByRaw)) {
+            $builder = $builder->groupByRaw($groupByRaw);
+        }
+        if ( ! empty($orderByRaw)) {
+            $builder = $builder->orderByRaw($orderByRaw);
+        }
+        if ($offset >= 0 && $limit > 0) {
+            $builder = $builder->skip($offset)->take($limit);
+        }
+        $data = $builder->get();
+        if (empty($data)) {
+            return [];
+        }
+        return $data->toArray();
+    }
+    
+    /**
      * 获取记录行数
      *
      * @param array $where
