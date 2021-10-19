@@ -19,7 +19,7 @@ class BasePModel extends Model
      * @param array $select
      * @return array
      */
-    public static function firstP(array $where, array $columns = ['*'], bool $ignoreDeleted = false, bool $isDeleted = false)
+    public static function firstP(array $where, array $columns = ['*'], bool $ignoreDeleted = false, bool $isDeleted = false): array
     {
         self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
         $data = static::query()->where($where)->first($columns);
@@ -34,6 +34,7 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param array $columns
+     * @param array $whereInKeyToValue
      * @param string $orderByRaw
      * @param string $groupByRaw
      * @param int $offset
@@ -45,19 +46,26 @@ class BasePModel extends Model
     public static function getP(
         array $where,
         array $columns = ['*'],
+        array $whereInKeyToValue = [],
         string $orderByRaw = "",
         string $groupByRaw = "",
         int $offset = 0,
         int $limit = 0,
         bool $ignoreDeleted = false,
         bool $isDeleted = false
-    ){
+    ): array
+    {
         self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
-        $builder = static::query()->select($columns);
-        if ( ! empty($groupByRaw)) {
+        $builder = static::query()->select($columns)->where($where);
+        if (!empty($whereIn)) {
+            foreach ($whereInKeyToValue as $field => $value) {
+                $builder = $builder->whereIn($field, $whereIn);
+            }
+        }
+        if (!empty($groupByRaw)) {
             $builder = $builder->groupByRaw($groupByRaw);
         }
-        if ( ! empty($orderByRaw)) {
+        if (!empty($orderByRaw)) {
             $builder = $builder->orderByRaw($orderByRaw);
         }
         if ($offset >= 0 && $limit > 0) {
@@ -77,10 +85,20 @@ class BasePModel extends Model
      * @param string $columns
      * @return int
      */
-    public static function countP(array $where, string $columns = "*", bool $ignoreDeleted = false, bool $isDeleted = false)
+    public static function countP(
+        array $where,
+        string $columns = "*",
+        string $groupByRaw = "",
+        bool $ignoreDeleted = false,
+        bool $isDeleted = false
+    ): int
     {
         self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
-        $count = static::query()->where($where)->count($columns);
+        $builder = static::query()->where($where);
+        if (!empty($groupByRaw)) {
+            $builder = $builder->groupByRaw($groupByRaw);
+        }
+        $count = $builder->count($columns);
         return $count;
     }
     
@@ -103,7 +121,7 @@ class BasePModel extends Model
      * @param bool $autoTimeField
      * @return int
      */
-    public static function insertGetIdP(array $data, bool $autoTimeField = true)
+    public static function insertGetIdP(array $data, bool $autoTimeField = true): int
     {
         self::autoCreateAtAndUpdatedAtField($data, $autoTimeField);
         return static::query()->insertGetId($data);
@@ -112,11 +130,12 @@ class BasePModel extends Model
     /**
      * 添加信息
      *
+     * @param array $where
      * @param array $data
      * @param bool $autoTimeField
      * @return int
      */
-    public static function updateP(array $where, array $data, bool $autoTimeField = true)
+    public static function updateP(array $where, array $data, bool $autoTimeField = true): int
     {
         self::autoCreateAtAndUpdatedAtField($data, $autoTimeField);
         return static::query()->where($where)->update($data);
@@ -128,9 +147,9 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param array $data
-     * @return bool
+     * @return int
      */
-    public static function updateOrInsertP(array $where, array $data)
+    public static function updateOrInsertP(array $where, array $data): int
     {
         return static::query()->updateOrInsert($where, $data);
     }
@@ -159,7 +178,7 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param bool $ignoreDeleted 是否忽略 deleted_at 字段，忽略则不再检查 $isDeleted
-     * @param bool $isDeleted   $ignoreDeleted = false 情况下，判断并添加 deleted_at 字段
+     * @param bool $isDeleted $ignoreDeleted = false 情况下，判断并添加 deleted_at 字段
      */
     private static function autoDeletedAtField(array &$where, bool $ignoreDeleted, bool $isDeleted)
     {
@@ -170,9 +189,9 @@ class BasePModel extends Model
         
         // 忽略 deleted_at 字段则不继续检查
         if ($ignoreDeleted) {
-           return;
+            return;
         }
-    
+        
         if ($isDeleted) {
             array_push($where, ['deleted_at', '!=', 0]);
         } else {
