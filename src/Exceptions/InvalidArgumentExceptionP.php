@@ -24,18 +24,20 @@ class InvalidArgumentExceptionP extends Exception
     }
     
     /**
-     * 报告异常.
+     * 是否自定义异常处理.
+     *  true: 不由 App\Exceptions\Handler 中 register 的方法进行异常处理。
+     *  false: 由 App\Exceptions\Handler 中 register 的方法进行异常处理，同样可在App\Exceptions\Handler 中 register 的方法中通过类型提示自定义异常
      *
      * @return bool|null
      */
     public function report()
     {
-        // 通知 App\Exceptions\Handler 是否报告异常
         return false;
     }
     
     /**
      * 渲染异常为 HTTP 响应。
+     *  当 App\Exceptions\Handler 的render return parent::render($request, $e); 时生效
      *
      * @param $request
      * @return \Illuminate\Http\JsonResponse
@@ -49,6 +51,7 @@ class InvalidArgumentExceptionP extends Exception
      * 当直接输出该异常类时显示的内容。
      *      __toString() 方法用于一个类被当成字符串输出。并且该方法不能抛出异常
      *      echo $e; 触发
+     *      Log::error($e); 触发
      *      echo $e->getMessage(); # 不触发
      *
      * @return string
@@ -56,7 +59,7 @@ class InvalidArgumentExceptionP extends Exception
     public function __toString()
     {
         $request = json_encode(Request::input());
-        $log = sprintf('error_code: %s error_message: %s request: %s', $this->code, $this->message, $request);
+        $log = sprintf('class:%s@function:%s.error_code: %s error_message: %s request: %s', __CLASS__, __FUNCTION__, $this->code, $this->message, $request);
         return $log;
     }
 }
