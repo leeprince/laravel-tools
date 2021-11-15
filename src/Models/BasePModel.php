@@ -26,6 +26,7 @@ class BasePModel extends Model
         if (empty($data)) {
             return [];
         }
+        
         return $data->toArray();
     }
     
@@ -137,7 +138,7 @@ class BasePModel extends Model
      */
     public static function updateP(array $where, array $data, bool $autoTimeField = true): int
     {
-        self::autoCreateAtAndUpdatedAtField($data, $autoTimeField);
+        self::autoCreateAtAndUpdatedAtField($data, $autoTimeField, true);
         return static::query()->where($where)->update($data);
     }
     
@@ -160,11 +161,11 @@ class BasePModel extends Model
      * @param array $data
      * @param bool $autoTimeField
      */
-    private static function autoCreateAtAndUpdatedAtField(array &$data, bool $autoTimeField)
+    private static function autoCreateAtAndUpdatedAtField(array &$data, bool $autoTimeField, bool $isUpdate = false)
     {
         if ($autoTimeField) {
             $ctime = time();
-            if (!isset($data['created_at']) || empty($data['created_at'])) {
+            if (!$isUpdate && (!isset($data['created_at']) || empty($data['created_at']))) {
                 $data['created_at'] = $ctime;
             }
             if (!isset($data['updated_at']) || empty($data['updated_at'])) {
