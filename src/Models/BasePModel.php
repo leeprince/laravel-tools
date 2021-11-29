@@ -58,9 +58,9 @@ class BasePModel extends Model
     {
         self::autoDeletedAtField($where, $ignoreDeleted, $isDeleted);
         $builder = static::query()->select($columns)->where($where);
-        if (!empty($whereIn)) {
+        if (!empty($whereInKeyToValue)) {
             foreach ($whereInKeyToValue as $field => $value) {
-                $builder = $builder->whereIn($field, $whereIn);
+                $builder = $builder->whereIn($field, $value);
             }
         }
         if (!empty($groupByRaw)) {
@@ -179,7 +179,7 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param bool $ignoreDeleted 是否忽略 deleted_at 字段，忽略则不再检查 $isDeleted
-     * @param bool $isDeleted $ignoreDeleted = false 情况下，判断并添加 deleted_at 字段
+     * @param bool $isDeleted $ignoreDeleted = false 情况下，判断并添加 deleted_at 字段;true: 返回删除的数据；false:返回未删除的数据
      */
     private static function autoDeletedAtField(array &$where, bool $ignoreDeleted, bool $isDeleted)
     {
