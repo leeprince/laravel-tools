@@ -144,15 +144,28 @@ class BasePModel extends Model
     
     /**
      * 存在更新；不存在则插入
-     *  created_at、updated_at 字段需外部维护
+     *  created_at、updated_at 字段 Illuminate\Database\Query 不维护，需自己维护
      *
      * @param array $where
      * @param array $data
      * @return int
      */
-    public static function updateOrInsertP(array $where, array $data): int
+    public static function updateOrInsertP(array $attributes, array $values = [])
     {
-        return static::query()->updateOrInsert($where, $data);
+        return static::query()->updateOrInsert($attributes, $values);
+    }
+    
+    /**
+     * 存在更新；不存在则插入
+     *  created_at、updated_at 字段 Illuminate\Database\Eloquent 维护
+     *
+     * @param array $where
+     * @param array $data
+     * @return int
+     */
+    public static function updateOrCreateP(array $attributes, array $values = [])
+    {
+        return static::query()->updateOrCreate($attributes, $values);
     }
     
     /**
