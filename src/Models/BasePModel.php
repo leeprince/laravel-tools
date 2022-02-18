@@ -148,7 +148,7 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param array $data
-     * @return int
+     * @return
      */
     public static function updateOrInsertP(array $attributes, array $values = [])
     {
@@ -161,7 +161,7 @@ class BasePModel extends Model
      *
      * @param array $where
      * @param array $data
-     * @return int
+     * @return
      */
     public static function updateOrCreateP(array $attributes, array $values = [])
     {
